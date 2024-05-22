@@ -7,8 +7,10 @@ enum PathError: Error {
 }
 
 @main
-struct UseGraphCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
+public struct UseGraphCommand: AsyncParsableCommand {
+    public init() { }
+    
+    public static let configuration = CommandConfiguration(
         commandName: "usage_graph",
         abstract: "Command to build graph of usage.",
         version: "0.0.1"
@@ -20,19 +22,21 @@ struct UseGraphCommand: AsyncParsableCommand {
     @Argument
     var format: String = "svg"
     
-    @Option
+    @Option(help: ArgumentHelp(stringLiteral: "Путь к сорасам, на которых вы хотите дообучить модель"))
     var educationalPath: String? = nil
+    
+    @Flag
+    var showLastChildren: Bool = false
     
     @Option
     var excludedNames: String? = nil
-    
-    func run() async throws {
+
+    public func run() async throws {
         guard let url = URL(string: path) else {
             throw PathError.pathIsNotCorrect
         }
         
         let format = try OutputFormat.parse(format: format)
-
         
         var scanResults = await InitScanner.scan(url: url)
             .map(\.parametersDependencies)
@@ -60,14 +64,18 @@ struct UseGraphCommand: AsyncParsableCommand {
                 scanResults.removeValue(forKey: String($0))
             }
         }
-        
         var results = scanResults
-            .reduce([String: Set<String>]()) { result, element in
-                var newResult = result
-                let usedNodes = element.value.filter { scanResults.keys.contains($0) }
-                newResult[element.key] = usedNodes
-                return newResult
-            }
+        
+        if !showLastChildren {
+            results = scanResults
+                .reduce([String: Set<String>]()) { result, element in
+                    var newResult = result
+                    let usedNodes = element.value.filter { scanResults.keys.contains($0) }
+                    newResult[element.key] = usedNodes
+                    return newResult
+                }
+        }
+        
         results = results
             .reduce([String: Set<String>]()) { result, element in
                 var newResult = result
