@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.2"),
         .package(url: "https://github.com/SwiftDocOrg/GraphViz", from: "0.4.1"),
+        .package(url: "https://github.com/tuist/XcodeProj", from: "8.20.0")
     ],
     targets: [
         .executableTarget(
@@ -27,6 +28,7 @@ let package = Package(
         .target(
             name: "UseGraphCore",
             dependencies: [
+                .product(name: "XcodeProj", package: "XcodeProj"),
                 .product(name: "GraphViz", package: "GraphViz"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
