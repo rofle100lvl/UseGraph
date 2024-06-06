@@ -1,11 +1,6 @@
 import XcodeProj
 import Foundation
 
-struct Module {
-    let moduleName: String
-    let files: [URL]
-}
-
 final class XcodeprojManager {
     static func getAllModules(projUrl: URL) throws -> [Module] {
         let proj = try XcodeProj(path: .init(projUrl.path()))

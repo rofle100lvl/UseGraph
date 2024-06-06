@@ -6,33 +6,30 @@ import SwiftParser
 final class OwnershipFinderClosureTests: XCTestCase {
     func testClassWithVariableInside() throws {
         let rootNode: SourceFileSyntax = Parser.parse(source: classWithVariableInside)
-        let visitor = DefinitionVisitor(converter: SourceLocationConverter(fileName: "", tree: rootNode))
+        let visitor = DefinitionVisitor()
         visitor.walk(rootNode)
-        XCTAssertEqual(visitor.possibleToOptimizeNames, ["A": Set(["SomeClass"])])
+        XCTAssertEqual(visitor.graphDependencies, ["A": Set(["SomeClass"])])
     }
     
     func testClassWithFunction() throws {
         let rootNode: SourceFileSyntax = Parser.parse(source: classWithFunction)
-        let visitor = DefinitionVisitor(converter: SourceLocationConverter(fileName: "", tree: rootNode))
+        let visitor = DefinitionVisitor()
         visitor.walk(rootNode)
-        XCTAssertEqual(visitor.possibleToOptimizeNames, ["A": Set(["SomeClass"])])
+        XCTAssertEqual(visitor.graphDependencies, ["A": Set(["SomeClass"])])
     }
     
     func testClassWithInnerStruct() throws {
         let rootNode: SourceFileSyntax = Parser.parse(source: classWithInnerStruct)
-        let visitor = DefinitionVisitor(converter: SourceLocationConverter(fileName: "", tree: rootNode))
+        let visitor = DefinitionVisitor()
         visitor.walk(rootNode)
-        XCTAssertEqual(visitor.possibleToOptimizeNames, ["B": Set(["SomeClass"]), "A": Set(["B"])])
+        XCTAssertEqual(visitor.graphDependencies, ["B": Set(["SomeClass"]), "A": Set(["B"])])
     }
     
     func testTwoClassesWithConnectionBetweenThem() throws {
         let rootNode: SourceFileSyntax = Parser.parse(source: twoClassesWithConnectionBetweenThem)
-        let visitor = DefinitionVisitor(converter: SourceLocationConverter(fileName: "", tree: rootNode))
+        let visitor = DefinitionVisitor()
         visitor.walk(rootNode)
-        XCTAssertEqual(visitor.possibleToOptimizeNames, ["B": Set(["SomeClass"]), "A": Set(["B"])])
-        print(GraphBuilder.shared.buildGraph(dependencyGraph: visitor.possibleToOptimizeNames))
-        sleep(5)
-        
+        XCTAssertEqual(visitor.graphDependencies, ["B": Set(["SomeClass"]), "A": Set(["B"])])
     }
     
 }
