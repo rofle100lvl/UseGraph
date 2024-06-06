@@ -2,11 +2,10 @@ import SwiftSyntax
 
 final class DefinitionVisitor: SyntaxVisitor {
     var graphDependencies = [String: Set<String>]()
-    private let codeBlockItemSyntaxVisitor = CodeBlockItemSyntaxVisitor()
-    private let moduleName: String?
+    private let codeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisitor
     
     init(moduleName: String? = nil) {
-        self.moduleName = moduleName
+        codeBlockItemSyntaxVisitor = CodeBlockItemSyntaxVisitor(moduleName: moduleName)
         super.init(viewMode: .all)
     }
     
@@ -23,6 +22,10 @@ final class EntityVisitor: SyntaxVisitor {
     var graphDependencies = [String: Set<String>]()
     let moduleName: String?
     private let codeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisiting
+    
+    var finalEntityName: String {
+        moduleName == nil ? entityName : moduleName ?? "" + "." + entityName
+    }
     
     init(
         entityName: String,

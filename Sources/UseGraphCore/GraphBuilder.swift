@@ -1,5 +1,6 @@
 import GraphViz
 import Foundation
+import Utils
 
 public final class GraphBuilder {
     public static let shared = GraphBuilder()
@@ -26,7 +27,12 @@ public final class GraphBuilder {
             .reduce([:]) { result, name in
                 var resultCopy = result
                 let moduleName = dependencyGraph[name]?.moduleName ?? ""
-                let node = NodeCSVRepresentation(id: moduleName + "." + name, module: moduleName, label: name)
+                let node = NodeCSVRepresentation(
+                    id: moduleName + "." + name,
+                    module: moduleName,
+                    label: name,
+                    path: dependencyGraph[name]?.fileName ?? ""
+                )
                 resultCopy[name] = node
                 return resultCopy
             }

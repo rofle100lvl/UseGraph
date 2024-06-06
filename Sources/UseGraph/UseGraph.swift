@@ -43,6 +43,9 @@ enum PathError: Error {
         @Option(help: "Use if you want to exclude any entity names")
         var excludedNames: String? = nil
         
+        @Option(help: "Use if you want to exclude any targets")
+        var excludedTargets: String? = nil
+        
         public func run() async throws {
             if projectPath != nil && folderPath != nil {
                 throw PathError.shouldBeOnlyOnePath
@@ -66,11 +69,15 @@ enum PathError: Error {
             
             let format = try OutputFormat.parse(format: format)
             
-            var scanResults = try await InitScanner.scan(url: url)
+            var scanResults = try await InitScanner.scan(url: url, excludedModules: excludedTargets?.split(separator: ",").map { String($0) } ?? [])
                 .map(\.fileScanResult)
                 .reduce([String: Node]()) { result, element in
                     result.merging(element, uniquingKeysWith: {
-                        Node(moduleName: $0.moduleName, connectedTo: $0.connectedTo.union($1.connectedTo))
+                        Node(
+                            moduleName: $0.moduleName,
+                            fileName: $0.fileName,
+                            connectedTo: $0.connectedTo.union($1.connectedTo)
+                        )
                     })
                 }
             
@@ -80,7 +87,11 @@ enum PathError: Error {
                     .map(\.fileScanResult)
                     .reduce([String: Node]()) { result, element in
                         result.merging(element, uniquingKeysWith: {
-                            Node(moduleName: $0.moduleName, connectedTo: $0.connectedTo.union($1.connectedTo))
+                            Node(
+                                moduleName: $0.moduleName,
+                                fileName: $0.fileName,
+                                connectedTo: $0.connectedTo.union($1.connectedTo)
+                            )
                         })
                     }
                 
@@ -99,7 +110,11 @@ enum PathError: Error {
                     .reduce([String: Node]()) { result, element in
                         var newResult = result
                         let usedNodes = element.value.connectedTo.filter { scanResults.keys.contains($0) }
-                        newResult[element.key] = Node(moduleName: element.value.moduleName, connectedTo: usedNodes)
+                        newResult[element.key] = Node(
+                            moduleName: element.value.moduleName,
+                            fileName: element.value.fileName,
+                            connectedTo: usedNodes
+                        )
                         return newResult
                     }
             }
@@ -114,7 +129,11 @@ enum PathError: Error {
                             set.insert(element.key.appending(".").appending(to))
                         }
                     }
-                    newResult[element.key] = Node(moduleName: element.value.moduleName, connectedTo: set)
+                    newResult[element.key] = Node(
+                        moduleName: element.value.moduleName,
+                        fileName: element.value.fileName,
+                        connectedTo: set
+                    )
                     return newResult
                 }
             

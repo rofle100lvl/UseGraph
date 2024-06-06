@@ -14,6 +14,12 @@ protocol CodeBlockItemSyntaxVisiting {
 }
 
 final class CodeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisiting {
+    let moduleName: String?
+    
+    init(moduleName: String?) {
+        self.moduleName = moduleName
+    }
+    
     func visitCode(
         _ node: MemberBlockItemSyntax,
         containerName: String,
@@ -62,6 +68,8 @@ final class CodeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisiting {
     ) -> SyntaxVisitorContinueKind {
         var name: String?
         var memberBlock: MemberBlockSyntax?
+        var isExtension: Bool = false
+        
         switch node.item {
         case .decl(let declSyntax):
             switch declSyntax.kind {
@@ -81,6 +89,7 @@ final class CodeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisiting {
                 let extensionDecl = node.item.as(ExtensionDeclSyntax.self)
                 memberBlock = extensionDecl?.memberBlock
                 name = extensionDecl?.extendedType.as(IdentifierTypeSyntax.self)?.name.text
+                isExtension = true
             default:
                 break
             }
@@ -88,8 +97,15 @@ final class CodeBlockItemSyntaxVisitor: CodeBlockItemSyntaxVisiting {
             break
         }
         
-        if let name,
+        if var name,
            let memberBlock {
+            if isExtension {
+                var index = 0
+                while graphDependencies.keys.contains(name + "Ext\(index)") {
+                    index += 1
+                }
+                name = name + "Ext\(index)"
+            }
             diveInto(
                 name: name,
                 memberBlock: memberBlock,
