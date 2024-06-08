@@ -65,29 +65,28 @@ public final class GraphBuilder {
 
     }
     
-    public func buildGraph(dependencyGraph: [String: Node], format: OutputFormat) {
+    public func buildGraph(dependencyGraph: [String: Node], format: OutputFormat) async throws {
         switch format {
         case .svg, .png, .gv:
-            buildFormat(dependencyGraph: dependencyGraph, format: format)
+            guard let format = mapFormat(format: format) else { fatalError() }
+
+            let data = try await buildGraphData(dependencyGraph: dependencyGraph, format: format)
+            let url = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Graph.\(format.rawValue)")
+            guard var fileContents = String(data: data, encoding: .utf8) else { fatalError() }
+            if format == .gv {
+                fileContents = self.removeSecondAndThirdLine(string: fileContents)
+            }
+            
+            print(FileManager.default.createFile(atPath: url.path(), contents: fileContents.data(using: .utf8)))
+            Task {
+                System.shared.run("open \(url.path())")
+            }
         case .csv:
             csvBuildGraph(dependencyGraph: dependencyGraph)
         }
     }
-
     
-    private func buildFormat(dependencyGraph: [String: Node], format: OutputFormat) {
-        let format: Format? = switch format {
-        case .svg:
-                .svg
-        case .png:
-                .png
-        case .gv:
-                .gv
-        case .csv:
-            nil
-        }
-        
-        guard let format else { fatalError() }
+    public func buildGraphData(dependencyGraph: [String: Node], format: Format) async throws -> Data  {
         var graph = Graph(directed: true)
         
         let nodes: [String: GraphViz.Node] = dependencyGraph
@@ -117,22 +116,17 @@ public final class GraphBuilder {
             }
         }
         print("Start building graph...")
-        graph.render(using: .fdp, to: format) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let data):
-                let url = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Graph.\(format.rawValue)")
-                guard var fileContents = String(data: data, encoding: .utf8) else { fatalError() }
-                if format == .gv {
-                    fileContents = self.removeSecondAndThirdLine(string: fileContents)
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            graph.render(using: .fdp, to: format) { [weak self] result in
+                guard let self = self else { return }
+                switch result {
+                case .success(let data):
+                    continuation.resume(returning: data)
+                case .failure(let failure):
+                    continuation.resume(throwing: BuildGraphError.buildGraphError)
+                    print(failure)
                 }
-                
-                print(FileManager.default.createFile(atPath: url.path(), contents: fileContents.data(using: .utf8)))
-                Task {
-                    System.shared.run("open \(url.path())")
-                }
-            case .failure(let failure):
-                print(failure)
             }
         }
         sleep(10000)
@@ -142,5 +136,22 @@ public final class GraphBuilder {
         var lines = string.split(separator: "\n")
         lines.removeSubrange(1...2)
         return lines.joined(separator: "\n")
+    }
+    
+    
+}
+
+extension GraphBuilder {
+    func mapFormat(format: OutputFormat) -> Format? {
+        switch format {
+        case .svg:
+                .svg
+        case .png:
+                .png
+        case .gv:
+                .gv
+        case .csv:
+            nil
+        }
     }
 }
