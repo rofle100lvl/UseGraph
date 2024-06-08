@@ -72,10 +72,10 @@ enum PathError: Error {
         var projectPath: String? = nil
 
         public func run() async throws {
-            Configuration.shared.project = projectPath
-            Configuration.shared.schemes = ["Test"]
+            Configuration.shared.workspace = projectPath
+            Configuration.shared.schemes = ["App"]
             if let projectPath {
-                Configuration.shared.targets = ["C"]
+                Configuration.shared.targets = ["TA"]
             }
             let driver = try XcodeProjectDriver.build()
             try driver.build()

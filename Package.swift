@@ -45,13 +45,6 @@ let package = Package(
             ]
         ),
         .target(
-            name: "XcodeSymbols",
-            dependencies: [
-                "Utils",
-                .product(name: "SwiftIndexStore", package: "swift-indexstore")
-            ]
-        ),
-        .target(
             name: "Utils"
         ),
         .testTarget(
