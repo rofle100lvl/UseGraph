@@ -9,6 +9,7 @@ let package = Package(
         .macOS(.v14),
     ],
     products: [
+        .library(name: "UseGraphFrontend", targets: ["UseGraphFrontend"]),
         .executable(name: "UseGraph", targets: ["UseGraph"]),
     ],
     dependencies: [
@@ -29,6 +30,12 @@ let package = Package(
         ),
         .executableTarget(
             name: "UseGraph",
+            dependencies: [
+                "UseGraphFrontend",
+            ]
+        ),
+        .target(
+            name: "UseGraphFrontend",
             dependencies: [
                 "UseGraphCore",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
