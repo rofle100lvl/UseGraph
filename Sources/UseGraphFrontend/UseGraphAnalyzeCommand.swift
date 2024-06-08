@@ -144,7 +144,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
             )
             guard let edgesData = htmlString.data(using: .utf8) else { fatalError() }
             
-            FileManager.default.createFile(atPath: url.appending(path: "index.html").path(), contents: edgesData)
+            FileManager.default.createFile(atPath: url.appending(path: "module-info.html").path(), contents: edgesData)
             
             print(folderPath + " - " + String(edges.count))
            
