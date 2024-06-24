@@ -53,7 +53,7 @@ public final class HTMLGenerator {
             width: '1000px',
             height: 'auto',
           }}>
-            <svg viewBox="0 0 \(extractWidthHeight(from: svgString).width + " " + extractWidthHeight(from: svgString).height) 3000 3000">
+            <svg viewBox="0 0 3000 3000">
                 \(svgString)
             </svg>
         </div>
@@ -63,28 +63,4 @@ public final class HTMLGenerator {
         
         return htmlString
     }
-}
-
-func extractWidthHeight(from svgString: String) -> (width: String?, height: String?) {
-    let widthPattern = "width = \"([^\"]*)\""
-    let heightPattern = "height = \"([^\"]*)\""
-    
-    func extract(pattern: String, from string: String) -> String? {
-        do {
-            let regex = try NSRegularExpression(pattern: pattern, options: [])
-            let nsRange = NSRange(string.startIndex..<string.endIndex, in: string)
-            if let match = regex.firstMatch(in: string, options: [], range: nsRange) {
-                let range = Range(match.range(at: 1), in: string)
-                return range.map { String(string[$0]) }
-            }
-        } catch let error {
-            print("Regular expression error: \(error)")
-        }
-        return nil
-    }
-    
-    let width = extract(pattern: widthPattern, from: svgString)
-    let height = extract(pattern: heightPattern, from: svgString)
-    
-    return (width, height)
 }
