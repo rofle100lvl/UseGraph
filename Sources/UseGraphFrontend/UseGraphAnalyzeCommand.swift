@@ -1,5 +1,7 @@
 import ArgumentParser
 import Foundation
+import Utils
+import UseGraphStaticAnalysis
 import UseGraphCore
 
 struct EdgeNode: Hashable {
@@ -138,7 +140,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
 
             let htmlString = HTMLGenerator.shared.generateHTMLTable(
                 withLinks: edges.map {
-                    ($0.from.fileName, $0.from.name, $0.to.fileName, $0.to.name)
+                    ($0.from.fileName, $0.from.name, $0.to.fileName, $0.to.name, [])
                 },
                 svgString: String(data: data, encoding: .utf8) ?? ""
             )

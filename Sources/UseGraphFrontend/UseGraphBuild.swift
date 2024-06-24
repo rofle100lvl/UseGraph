@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import UseGraphCore
+import UseGraphStaticAnalysis
 
 enum PathError: Error {
     case pathIsNotCorrect

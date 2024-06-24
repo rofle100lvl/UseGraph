@@ -1,5 +1,6 @@
 import GraphViz
 import Foundation
+import UseGraphStaticAnalysis
 import Utils
 
 public final class GraphBuilder {
@@ -7,7 +8,7 @@ public final class GraphBuilder {
     
     private init() { }
     
-    private func createCSV(from recArray:[CSVRepresentable]) -> String {
+    private func createCSV(from recArray: [CSVRepresentable]) -> String {
         guard let fields = recArray.first?.fields else { return "" }
         var csvString = fields.joined(separator: ",") + "\n"
         for dct in recArray {
@@ -16,7 +17,7 @@ public final class GraphBuilder {
         return csvString
     }
     
-    private func csvBuildGraph(dependencyGraph: [String: Node]) {
+    private func csvBuildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node]) {
         let nodes: [String: NodeCSVRepresentation] = dependencyGraph
             .reduce(Set<String>()) { result, element in
                 var resultCopy = result
@@ -65,7 +66,7 @@ public final class GraphBuilder {
 
     }
     
-    public func buildGraph(dependencyGraph: [String: Node], format: OutputFormat) async throws {
+    public func buildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node], format: OutputFormat) async throws {
         switch format {
         case .svg, .png, .gv:
             guard let format = mapFormat(format: format) else { fatalError() }
@@ -86,7 +87,7 @@ public final class GraphBuilder {
         }
     }
     
-    public func buildGraphData(dependencyGraph: [String: Node], format: Format) async throws -> Data  {
+    public func buildGraphData(dependencyGraph: [String: UseGraphStaticAnalysis.Node], format: Format) async throws -> Data  {
         var graph = Graph(directed: true)
         
         let nodes: [String: GraphViz.Node] = dependencyGraph
@@ -118,8 +119,7 @@ public final class GraphBuilder {
         print("Start building graph...")
         
         return try await withCheckedThrowingContinuation { continuation in
-            graph.render(using: .fdp, to: format) { [weak self] result in
-                guard let self = self else { return }
+            graph.render(using: .fdp, to: format) { result in
                 switch result {
                 case .success(let data):
                     continuation.resume(returning: data)
@@ -129,7 +129,6 @@ public final class GraphBuilder {
                 }
             }
         }
-        sleep(10000)
     }
     
     private func removeSecondAndThirdLine(string: String) -> String {
@@ -137,8 +136,6 @@ public final class GraphBuilder {
         lines.removeSubrange(1...2)
         return lines.joined(separator: "\n")
     }
-    
-    
 }
 
 extension GraphBuilder {
