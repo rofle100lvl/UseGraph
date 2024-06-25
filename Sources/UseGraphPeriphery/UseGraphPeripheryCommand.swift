@@ -116,9 +116,12 @@ public struct UseGraphPeripheryAnalyzeCommand: AsyncParsableCommand {
                         $0.to.id < $1.to.id
                     }
                     .map {
-                        ($0.from.fileName, $0.from.id, $0.to.fileName, $0.to.id, $0.references.map {
-                            String($0.line)
-                        })
+                        (
+                            $0.from.fileName, $0.from.id, $0.to.fileName, $0.to.id, $0.references.sorted(by: { $0 < $1 } )
+                                .map {
+                                    String($0.line)
+                                }
+                        )
                     },
                 svgString: String(data: data, encoding: .utf8) ?? ""
             )
