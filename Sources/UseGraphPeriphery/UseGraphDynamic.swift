@@ -83,11 +83,18 @@ public struct UseGraphPeripheryCommand: AsyncParsableCommand {
     @Option(help: "Path to project (.xcodeproj)")
     var projectPath: String? = nil
     
+    @Argument(help: "Schemes to analyze")
+    var schemes: String
+    
+    @Argument(help: "Targets to analyze")
+    var targets: String
+
+    
     public func run() async throws {
         Configuration.shared.workspace = projectPath
-        Configuration.shared.schemes = ["App"]
+        Configuration.shared.schemes = schemes.components(separatedBy: ",")
         if projectPath != nil {
-            Configuration.shared.targets = ["Travel"]
+            Configuration.shared.targets = targets.components(separatedBy: ",")
         }
         let driver = try XcodeProjectDriver.build()
         try driver.build()
