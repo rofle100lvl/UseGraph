@@ -1,4 +1,5 @@
 import Foundation
+import GraphViz
 import Utils
 
 protocol CSVRepresentable {
@@ -19,8 +20,28 @@ struct EdgeCSV: CSVRepresentable {
     }
 }
 
-public final class GraphBuilder {
-    public static let shared = GraphBuilder()
+enum OutputFormat {
+    case svg
+    case png
+    case gv
+    
+    public static func parse(format: String) throws -> OutputFormat {
+        switch format.lowercased() {
+        case "svg":
+                .svg
+        case "png":
+                .png
+        case "gv":
+                .gv
+        default:
+            throw FormatError.formatIsNotCorrect
+        }
+    }
+}
+
+
+final class GraphBuilder {
+    static let shared = GraphBuilder()
     
     private init() { }
     
@@ -33,7 +54,7 @@ public final class GraphBuilder {
         return csvString
     }
     
-    public func csvBuildGraph(edges: [Edge]) {
+    func csvBuildGraph(edges: [UseGraphPeriphery.Edge]) {
         var uniqueSet = Set<Node>()
         edges.map { [$0.from, $0.to] }.flatMap { $0 }.forEach { uniqueSet.insert($0) }
         
@@ -49,4 +70,71 @@ public final class GraphBuilder {
         print(FileManager.default.createFile(atPath: edgesUrl.path(), contents: edgesData))
         print(FileManager.default.createFile(atPath: nodesUrl.path(), contents: nodesData))
     }
+    
+    func buildGraph(edges: [Edge], format: OutputFormat) async throws {
+        switch format {
+        case .svg, .png, .gv:
+            guard let format = mapFormat(format: format) else { fatalError() }
+
+            let data = try await buildGraphData(edges: edges, format: format)
+            let url = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Graph.\(format.rawValue)")
+            guard var fileContents = String(data: data, encoding: .utf8) else { fatalError() }
+            if format == .gv {
+                fileContents = self.removeSecondAndThirdLine(string: fileContents)
+            }
+            
+            print(FileManager.default.createFile(atPath: url.path(), contents: fileContents.data(using: .utf8)))
+            Task {
+                System.shared.run("open \(url.path())")
+            }
+        }
+    }
+    
+    func buildGraphData(edges: [Edge], format: Format) async throws -> Data  {
+        var graph = Graph(directed: true)
+        
+        edges.forEach {
+            graph.append(GraphViz.Edge(
+                from: GraphViz.Node($0.from.id), 
+                to: GraphViz.Node($0.to.id)
+            ))
+        }
+
+        print("Start building graph...")
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            graph.render(using: .fdp, to: format) { [weak self] result in
+                guard self != nil else { return }
+                switch result {
+                case .success(let data):
+                    continuation.resume(returning: data)
+                case .failure(let failure):
+                    continuation.resume(throwing: BuildGraphError.buildGraphError)
+                    print(failure)
+                }
+            }
+        }
+    }
+    
+    private func removeSecondAndThirdLine(string: String) -> String {
+        var lines = string.split(separator: "\n")
+        lines.removeSubrange(1...2)
+        return lines.joined(separator: "\n")
+    }
+    
+    
 }
+
+extension GraphBuilder {
+    func mapFormat(format: OutputFormat) -> Format? {
+        switch format {
+        case .svg:
+                .svg
+        case .png:
+                .png
+        case .gv:
+                .gv
+        }
+    }
+}
+

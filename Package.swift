@@ -21,11 +21,13 @@ let package = Package(
         .package(url: "https://github.com/rofle100lvl/periphery.git", branch: "SourceGraphPublic")
     ],
     targets: [
-        .executableTarget(
+        .target(
             name: "UseGraphPeriphery",
             dependencies: [
                 .product(name: "PeripheryKit", package: "periphery"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "GraphViz", package: "GraphViz"),
+                "Utils",
             ]
         ),
         .executableTarget(
@@ -35,9 +37,19 @@ let package = Package(
             ]
         ),
         .target(
+            name: "UseGraphStaticAnalysis",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "XcodeProj", package: "XcodeProj"),
+            ]
+        ),
+        .target(
             name: "UseGraphFrontend",
             dependencies: [
                 "UseGraphCore",
+                "UseGraphStaticAnalysis",
+                "UseGraphPeriphery",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
@@ -45,10 +57,8 @@ let package = Package(
             name: "UseGraphCore",
             dependencies: [
                 "Utils",
-                .product(name: "XcodeProj", package: "XcodeProj"),
                 .product(name: "GraphViz", package: "GraphViz"),
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
+                "UseGraphStaticAnalysis",
             ]
         ),
         .target(

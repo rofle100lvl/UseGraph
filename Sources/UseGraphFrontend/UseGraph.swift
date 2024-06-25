@@ -7,6 +7,7 @@
 
 import Foundation
 import ArgumentParser
+import UseGraphPeriphery
 
 public struct UseGraphFrontendCommand: AsyncParsableCommand {
     public init() { }
@@ -17,7 +18,8 @@ public struct UseGraphFrontendCommand: AsyncParsableCommand {
       version: "0.0.1",
       subcommands: [
         UseGraphBuildCommand.self,
-        UseGraphAnalyzeCommand.self
+        UseGraphAnalyzeCommand.self,
+        UseGraphPeripheryAnalyzeCommand.self
       ]
     )
 }

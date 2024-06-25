@@ -12,7 +12,7 @@ public final class HTMLGenerator {
     
     private init() {}
     
-    public func generateHTMLTable(withLinks links: [(fromURL: String, fromText: String, toURL: String, toText: String)], svgString: String) -> String {
+    public func generateHTMLTable(withLinks links: [(fromURL: String, fromText: String, toURL: String, toText: String, lines: [String])], svgString: String) -> String {
         var htmlString = """
     <!DOCTYPE html>
     <html>
@@ -30,6 +30,7 @@ public final class HTMLGenerator {
             <tr>
                 <th>From</th>
                 <th>To</th>
+                <th>Lines</th>
             </tr>
     """
         
@@ -38,6 +39,7 @@ public final class HTMLGenerator {
             <tr>
                 <td><a href="\(link.fromURL)">\(link.fromText)</a></td>
                 <td><a href="\(link.toURL)">\(link.toText)</a></td>
+                <td>\(link.lines.joined(separator: ", "))</td>
             </tr>
         """
         }
