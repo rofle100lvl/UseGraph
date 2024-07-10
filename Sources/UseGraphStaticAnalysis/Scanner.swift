@@ -69,7 +69,7 @@ public enum InitScanner {
                                 })
                             }
                         
-                        var graphWithConnectedExtensions = graph
+                        let graphWithConnectedExtensions = graph
                             .reduce([String: Node]()) { result, element in
                                 var index = 0
                                 var newSet = element.value.connectedTo
@@ -118,7 +118,7 @@ public enum InitScanner {
                                 })
                             }
                         
-                        var graphWithConnectedExtensions = graph
+                        let graphWithConnectedExtensions = graph
                             .reduce([String: Node]()) { result, element in
                                 var index = 0
                                 var newSet = element.value.connectedTo
