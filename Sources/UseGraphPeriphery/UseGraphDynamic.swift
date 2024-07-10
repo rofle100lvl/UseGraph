@@ -4,7 +4,11 @@ import PeripheryKit
 import Shared
 import XcodeSupport
 
-struct Reference: Hashable {
+struct Reference: Hashable, Comparable {
+    static func < (lhs: Reference, rhs: Reference) -> Bool {
+        lhs.file < rhs.file || lhs.line < rhs.line
+    }
+
     let line: Int
     let file: String
 }
