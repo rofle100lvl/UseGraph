@@ -20,6 +20,7 @@ public struct UseGraphFrontendCommand: AsyncParsableCommand {
             UseGraphBuildCommand.self,
             UseGraphAnalyzeCommand.self,
             UseGraphPeripheryAnalyzeCommand.self,
+            UseGraphPeripheryBuildCommand.self
         ]
     )
 }

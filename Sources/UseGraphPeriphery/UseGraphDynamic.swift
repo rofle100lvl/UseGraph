@@ -26,7 +26,7 @@ struct EdgeWithoutReference: Hashable {
 
 struct Node: Hashable, CSVRepresentable {
     var csvRepresentation: String {
-        [moduleName, fileName, line, entityName ?? "", entityType ?? "", moduleName + id].joined(separator: ",")
+        [moduleName, fileName, line, entityName ?? "", entityType ?? "", id].joined(separator: ",")
     }
 
     var fields: [String] {
@@ -34,7 +34,7 @@ struct Node: Hashable, CSVRepresentable {
     }
 
     var id: String {
-        moduleName + "." + (containerName ?? "") + (entityName ?? "") + "." + (entityType ?? "")
+      moduleName + "." + (containerName ?? "") + (entityName ?? "") + "." + (entityType ?? "") + "." + usrs.joined(separator: ",")
     }
 
     public let moduleName: String
@@ -43,6 +43,7 @@ struct Node: Hashable, CSVRepresentable {
     public let containerName: String?
     public let entityName: String?
     public let entityType: String?
+  public let usrs: Set<String>
 
     public init(
         moduleName: String,
@@ -50,7 +51,8 @@ struct Node: Hashable, CSVRepresentable {
         line: String,
         entityName: String?,
         containerName: String?,
-        entityType: String?
+        entityType: String?,
+        usrs: Set<String> = Set<String>()
     ) {
         self.moduleName = moduleName
         self.fileName = fileName
@@ -58,6 +60,7 @@ struct Node: Hashable, CSVRepresentable {
         self.entityName = entityName
         self.containerName = containerName
         self.entityType = entityType
+      self.usrs = usrs
     }
 }
 
@@ -75,7 +78,7 @@ enum PathError: Error {
     }
 }
 
-public struct UseGraphPeripheryCommand: AsyncParsableCommand {
+public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
     public init() {}
 
     public static let configuration = CommandConfiguration(
@@ -94,7 +97,7 @@ public struct UseGraphPeripheryCommand: AsyncParsableCommand {
     var targets: String
 
     public func run() async throws {
-        Configuration.shared.workspace = projectPath
+        Configuration.shared.project = projectPath
         Configuration.shared.schemes = schemes.components(separatedBy: ",")
         if projectPath != nil {
             Configuration.shared.targets = targets.components(separatedBy: ",")
@@ -168,7 +171,8 @@ extension Declaration {
             line: String(entity.location.line),
             entityName: entity.name,
             containerName: entity.parent?.name,
-            entityType: entity.kind.rawValue
+            entityType: entity.kind.rawValue,
+            usrs: entity.usrs
         )
     }
 }

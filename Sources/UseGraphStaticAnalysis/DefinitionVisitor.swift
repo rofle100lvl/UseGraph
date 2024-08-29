@@ -37,6 +37,7 @@ final class EntityVisitor: SyntaxVisitor {
         self.graphDependencies = graphDependencies
         self.codeBlockItemSyntaxVisitor = codeBlockItemSyntaxVisitor
         self.moduleName = moduleName
+        self.graphDependencies[entityName] = []
         super.init(viewMode: .all)
     }
 

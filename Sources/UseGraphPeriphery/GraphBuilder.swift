@@ -94,11 +94,15 @@ final class GraphBuilder {
         var graph = Graph(directed: true)
 
         for edge in edges {
-            graph.append(GraphViz.Edge(
+            graph.append(
+              GraphViz.Edge(
                 from: GraphViz.Node(edge.from.id),
                 to: GraphViz.Node(edge.to.id)
-            ))
+              )
+            )
         }
+      
+        graph.render(using: .circo, to: .svg, completion: { _ in  })
 
         print("Start building graph...")
 
