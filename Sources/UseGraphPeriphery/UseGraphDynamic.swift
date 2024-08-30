@@ -26,31 +26,33 @@ struct EdgeWithoutReference: Hashable {
 
 struct Node: Hashable, CSVRepresentable {
     var csvRepresentation: String {
-        [moduleName, fileName, line, entityName ?? "", entityType ?? "", moduleName + id].joined(separator: ",")
+        [moduleName, fileName, line, entityName ?? "", entityType ?? "", id].joined(separator: ",")
     }
-    
+
     var fields: [String] {
         ["moduleName", "fileName", "line", "entityName", "entityType", "id"]
     }
-    
+
     var id: String {
-        moduleName + "." + (containerName ?? "") + (entityName ?? "") + "." + (entityType ?? "")
+      moduleName + "." + (containerName ?? "") + (entityName ?? "") + "." + (entityType ?? "") + "." + usrs.joined(separator: ",")
     }
-    
+
     public let moduleName: String
     public let fileName: String
     public let line: String
     public let containerName: String?
     public let entityName: String?
     public let entityType: String?
-    
+  public let usrs: Set<String>
+
     public init(
         moduleName: String,
         fileName: String,
         line: String,
         entityName: String?,
         containerName: String?,
-        entityType: String?
+        entityType: String?,
+        usrs: Set<String> = Set<String>()
     ) {
         self.moduleName = moduleName
         self.fileName = fileName
@@ -58,13 +60,14 @@ struct Node: Hashable, CSVRepresentable {
         self.entityName = entityName
         self.containerName = containerName
         self.entityType = entityType
+      self.usrs = usrs
     }
 }
 
 enum PathError: Error {
     case pathIsNotCorrect
     case shouldBeOnlyOnePath
-    
+
     var localizedDescription: String {
         switch self {
         case .pathIsNotCorrect:
@@ -75,44 +78,43 @@ enum PathError: Error {
     }
 }
 
-public struct UseGraphPeripheryCommand: AsyncParsableCommand {
-    public init() { }
-    
+public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
+    public init() {}
+
     public static let configuration = CommandConfiguration(
         commandName: "usage_graph_dynamic",
         abstract: "Command to build graph of usage.",
         version: "0.0.1"
     )
-    
+
     @Option(help: "Path to project (.xcodeproj)")
     var projectPath: String? = nil
-    
+
     @Argument(help: "Schemes to analyze")
     var schemes: String
-    
+
     @Argument(help: "Targets to analyze")
     var targets: String
 
-    
     public func run() async throws {
-        Configuration.shared.workspace = projectPath
+        Configuration.shared.project = projectPath
         Configuration.shared.schemes = schemes.components(separatedBy: ",")
         if projectPath != nil {
             Configuration.shared.targets = targets.components(separatedBy: ",")
         }
         let driver = try XcodeProjectDriver.build()
         try driver.build()
-        
+
         let graph = SourceGraph.shared
         try driver.index(graph: graph)
-        
+
         var edgeDict: [EdgeWithoutReference: [Reference]] = [:]
-        
+
         graph.allReferences
             .forEach {
                 if let declaration = graph.allExplicitDeclarationsByUsr[$0.usr],
-                   declaration.parent != $0.parent {
-                    
+                   declaration.parent != $0.parent
+                {
                     guard let entity = $0.parent?.findEntity(),
                           entity != declaration.findEntity(),
                           let entityParent = entity.presentAsNode(),
@@ -132,7 +134,7 @@ public struct UseGraphPeripheryCommand: AsyncParsableCommand {
                     )
                 }
             }
-        
+
         let edges = edgeDict.compactMap {
             Edge(from: $0.key.from, to: $0.key.to, references: $0.value)
         }
@@ -143,23 +145,23 @@ public struct UseGraphPeripheryCommand: AsyncParsableCommand {
 extension Declaration {
     func findEntity() -> Declaration? {
         var parent: Declaration? = self
-        while (parent != nil) &&
-                parent?.kind != .class &&
-                parent?.kind != .enum &&
-                parent?.kind != .struct &&
-                parent?.kind != .extension &&
-                parent?.kind != .protocol &&
-                parent?.kind != .typealias &&
-                parent?.kind != .extensionEnum &&
-                parent?.kind != .extensionStruct &&
-                parent?.kind != .extensionClass &&
-                parent?.kind != .extensionProtocol
+        while parent != nil,
+              parent?.kind != .class,
+              parent?.kind != .enum,
+              parent?.kind != .struct,
+              parent?.kind != .extension,
+              parent?.kind != .protocol,
+              parent?.kind != .typealias,
+              parent?.kind != .extensionEnum,
+              parent?.kind != .extensionStruct,
+              parent?.kind != .extensionClass,
+              parent?.kind != .extensionProtocol
         {
             parent = parent?.parent
         }
         return parent
     }
-    
+
     func presentAsNode() -> Node? {
         let entity = findEntity()
         guard let entity else { return nil }
@@ -169,7 +171,8 @@ extension Declaration {
             line: String(entity.location.line),
             entityName: entity.name,
             containerName: entity.parent?.name,
-            entityType: entity.kind.rawValue
+            entityType: entity.kind.rawValue,
+            usrs: entity.usrs
         )
     }
 }
