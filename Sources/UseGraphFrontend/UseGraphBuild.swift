@@ -69,7 +69,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
     
     var scanResults = try await InitScanner.scan(url: url, excludedModules: excludedTargets?.split(separator: ",").map { String($0) } ?? [])
       .map(\.fileScanResult)
-      .reduce([String: Node]()) { result, element in
+      .reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
         result.merging(element, uniquingKeysWith: {
           Node(
             moduleName: $0.moduleName,
@@ -88,7 +88,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
     
     if !showLastChildren {
       results = scanResults
-        .reduce([String: Node]()) { result, element in
+        .reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
           var newResult = result
           let usedNodes = element.value.connectedTo.filter { scanResults.keys.contains($0) }
           newResult[element.key] = Node(
@@ -103,7 +103,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
     excludeNames(excludedNames: excludedNames, scanResults: &scanResults)
     
     results = results
-      .reduce([String: Node]()) { result, element in
+      .reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
         var newResult = result
         var set = element.value.connectedTo
         for to in set {
@@ -112,7 +112,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
             set.insert(element.key.appending(".").appending(to))
           }
         }
-        newResult[element.key] = Node(
+        newResult[element.key] = UseGraphStaticAnalysis.Node(
           moduleName: element.value.moduleName,
           fileName: element.value.fileName,
           connectedTo: set
@@ -123,7 +123,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
     try await GraphBuilder.shared.buildGraph(dependencyGraph: results, format: format)
   }
   
-  func excludeNames(excludedNames: String?, scanResults: inout [String: Node]) {
+  func excludeNames(excludedNames: String?, scanResults: inout [String: UseGraphStaticAnalysis.Node]) {
     if let excludedNames {
       for item in excludedNames.split(separator: ", ") {
         scanResults.removeValue(forKey: String(item))

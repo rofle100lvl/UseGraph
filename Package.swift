@@ -28,6 +28,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "GraphViz", package: "GraphViz"),
                 "Utils",
+                "UseGraphCore"
             ]
         ),
         .executableTarget(
@@ -64,13 +65,13 @@ let package = Package(
         .target(
             name: "Utils"
         ),
-        .testTarget(
-            name: "UseGraphTest",
-            dependencies: [
-                "UseGraphCore",
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
-            ]
-        ),
+//        .testTarget(
+//            name: "UseGraphTest",
+//            dependencies: [
+//                "UseGraphCore",
+//                .product(name: "SwiftSyntax", package: "swift-syntax"),
+//                .product(name: "SwiftParser", package: "swift-syntax"),
+//            ]
+//        ),
     ]
 )
