@@ -1,4 +1,5 @@
 import ArgumentParser
+import UseGraphStaticAnalysis
 import Foundation
 import UseGraphPeriphery
 

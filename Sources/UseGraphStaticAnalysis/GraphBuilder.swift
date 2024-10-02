@@ -1,6 +1,6 @@
 import Foundation
+import UseGraphCore
 import GraphViz
-import UseGraphStaticAnalysis
 import Utils
 
 public final class GraphBuilder {
@@ -113,7 +113,7 @@ public final class GraphBuilder {
                 if let from = nodes[from.key],
                    let to = nodes[to]
                 {
-                    graph.append(Edge(from: from, to: to))
+                    graph.append(GraphViz.Edge(from: from, to: to))
                 }
             }
         }

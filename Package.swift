@@ -38,15 +38,16 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 .product(name: "XcodeProj", package: "XcodeProj"),
-
             ]
         ),
         .target(
             name: "UseGraphStaticAnalysis",
             dependencies: [
+                "UseGraphCore",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 .product(name: "XcodeProj", package: "XcodeProj"),
+                .product(name: "GraphViz", package: "GraphViz"),
             ]
         ),
         .target(
@@ -63,7 +64,6 @@ let package = Package(
             dependencies: [
                 "Utils",
                 .product(name: "GraphViz", package: "GraphViz"),
-                "UseGraphStaticAnalysis",
             ]
         ),
         .target(
