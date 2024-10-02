@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
-        .package(path: "/Users/rofle100lvl/Desktop/new_periphery/periphery"),
+        .package(url: "https://github.com/rofle100lvl/periphery/", branch: "PublicPackageAccess"),
         .package(url: "https://github.com/apple/swift-syntax", from: "600.0.1"),
         .package(url: "https://github.com/SwiftDocOrg/GraphViz", from: "0.4.1"),
         .package(url: "https://github.com/tuist/XcodeProj", from: "8.20.0"),
