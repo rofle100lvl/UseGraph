@@ -14,11 +14,11 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
-        .package(url: "https://github.com/apple/swift-syntax", from: "510.0.2"),
+        .package(path: "/Users/rofle100lvl/Desktop/new_periphery/periphery"),
+        .package(url: "https://github.com/apple/swift-syntax", from: "600.0.1"),
         .package(url: "https://github.com/SwiftDocOrg/GraphViz", from: "0.4.1"),
         .package(url: "https://github.com/tuist/XcodeProj", from: "8.20.0"),
-        .package(url: "https://github.com/ileitch/swift-indexstore", from: "9.0.4"),
-        .package(url: "https://github.com/rofle100lvl/periphery.git", branch: "SourceGraphPublic"),
+        .package(url: "https://github.com/kateinoigakukun/swift-indexstore", from: "0.3.0"),
     ],
     targets: [
         .target(
@@ -27,6 +27,7 @@ let package = Package(
                 .product(name: "PeripheryKit", package: "periphery"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "GraphViz", package: "GraphViz"),
+                .product(name: "SwiftIndexStore", package: "swift-indexstore"),
                 "Utils",
             ]
         ),
@@ -34,6 +35,10 @@ let package = Package(
             name: "UseGraph",
             dependencies: [
                 "UseGraphFrontend",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "XcodeProj", package: "XcodeProj"),
+
             ]
         ),
         .target(

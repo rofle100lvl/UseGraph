@@ -1,6 +1,9 @@
 import ArgumentParser
+import ProjectDrivers
 import Foundation
-import PeripheryKit
+import Configuration
+import SourceGraph
+import Scan
 import Shared
 import Utils
 import XcodeSupport
@@ -49,16 +52,22 @@ public struct UseGraphPeripheryAnalyzeCommand: AsyncParsableCommand {
         }
 
         guard let projectURL else { throw PathError.pathIsNotCorrect }
-        Configuration.shared.workspace = projectURL.absoluteString
-        Configuration.shared.schemes = schemes.components(separatedBy: ",")
+        let configuration = Configuration()
         if projectPath != nil {
-            Configuration.shared.targets = targets.components(separatedBy: ",")
+            configuration.project = .init(projectURL.absoluteString)
+            configuration.schemes = schemes.components(separatedBy: ",")
         }
-        let driver = try XcodeProjectDriver.build()
+        
+        let project = try Project(configuration: configuration)
+        let driver = try project.driver()
         try driver.build()
-
-        let graph = SourceGraph.shared
-        try driver.index(graph: graph)
+        let graph = SourceGraph(configuration: configuration)
+        
+        let scan = try Scan(
+            configuration: configuration,
+            sourceGraph: graph
+        )
+            .perform(project: project)
 
         var edgeDict: [EdgeWithoutReference: [Reference]] = [:]
 

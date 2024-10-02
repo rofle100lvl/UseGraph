@@ -1,6 +1,10 @@
 import ArgumentParser
+import ProjectDrivers
 import Foundation
 import PeripheryKit
+import SourceGraph
+import Configuration
+import Scan
 import Shared
 import XcodeSupport
 
@@ -97,16 +101,21 @@ public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
     var targets: String
 
     public func run() async throws {
-        Configuration.shared.project = projectPath
-        Configuration.shared.schemes = schemes.components(separatedBy: ",")
-        if projectPath != nil {
-            Configuration.shared.targets = targets.components(separatedBy: ",")
+        let configuration = Configuration()
+        if let projectPath {
+            configuration.project = .init(projectPath)
+            configuration.schemes = schemes.components(separatedBy: ",")
         }
-        let driver = try XcodeProjectDriver.build()
+        let project = try Project(configuration: configuration)
+        let driver = try project.driver()
         try driver.build()
-
-        let graph = SourceGraph.shared
-        try driver.index(graph: graph)
+        let graph = SourceGraph(configuration: configuration)
+        
+        _ = try Scan(
+            configuration: configuration,
+            sourceGraph: graph
+        )
+            .perform(project: project)
 
         var edgeDict: [EdgeWithoutReference: [Reference]] = [:]
 
