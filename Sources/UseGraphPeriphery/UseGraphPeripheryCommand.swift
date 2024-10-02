@@ -63,7 +63,7 @@ public struct UseGraphPeripheryAnalyzeCommand: AsyncParsableCommand {
         try driver.build()
         let graph = SourceGraph(configuration: configuration)
         
-        let scan = try Scan(
+        let _ = try Scan(
             configuration: configuration,
             sourceGraph: graph
         )

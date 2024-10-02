@@ -5,6 +5,7 @@ import PeripheryKit
 import SourceGraph
 import Configuration
 import Scan
+import UseGraphCore
 import Shared
 import XcodeSupport
 
@@ -26,46 +27,6 @@ struct Edge: Hashable {
 struct EdgeWithoutReference: Hashable {
     let from: Node
     let to: Node
-}
-
-struct Node: Hashable, CSVRepresentable {
-    var csvRepresentation: String {
-        [moduleName, fileName, line, entityName ?? "", entityType ?? "", id].joined(separator: ",")
-    }
-
-    var fields: [String] {
-        ["moduleName", "fileName", "line", "entityName", "entityType", "id"]
-    }
-
-    var id: String {
-      moduleName + "." + (containerName ?? "") + (entityName ?? "") + "." + (entityType ?? "") + "." + usrs.joined(separator: ",")
-    }
-
-    public let moduleName: String
-    public let fileName: String
-    public let line: String
-    public let containerName: String?
-    public let entityName: String?
-    public let entityType: String?
-  public let usrs: Set<String>
-
-    public init(
-        moduleName: String,
-        fileName: String,
-        line: String,
-        entityName: String?,
-        containerName: String?,
-        entityType: String?,
-        usrs: Set<String> = Set<String>()
-    ) {
-        self.moduleName = moduleName
-        self.fileName = fileName
-        self.line = line
-        self.entityName = entityName
-        self.containerName = containerName
-        self.entityType = entityType
-      self.usrs = usrs
-    }
 }
 
 enum PathError: Error {
@@ -106,6 +67,7 @@ public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
             configuration.project = .init(projectPath)
             configuration.schemes = schemes.components(separatedBy: ",")
         }
+
         let project = try Project(configuration: configuration)
         let driver = try project.driver()
         try driver.build()

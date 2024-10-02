@@ -1,7 +1,6 @@
 import ArgumentParser
 import Foundation
 import UseGraphCore
-import UseGraphStaticAnalysis
 import Utils
 
 struct EdgeNode: Hashable {
@@ -57,7 +56,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
 
         var scanResults = try await InitScanner.scan(url: projectURL, excludedModules: excludedTargets?.split(separator: ",").map { String($0) } ?? [])
             .map(\.fileScanResult)
-            .reduce([String: Node]()) { result, element in
+            .reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
                 result.merging(element, uniquingKeysWith: {
                     Node(
                         moduleName: $0.moduleName,
@@ -75,7 +74,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
 
         var results = scanResults
         results = results
-            .reduce([String: Node]()) { result, element in
+            .reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
                 var newResult = result
                 var set = element.value.connectedTo
                 for to in set {
@@ -98,7 +97,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
                 $0.value.fileName.matches(.init("\(folderPath).*"))
             }
 
-            let connectionGraph = edgesInFolder.reduce([String: Node]()) { result, element in
+            let connectionGraph = edgesInFolder.reduce([String: UseGraphStaticAnalysis.Node]()) { result, element in
                 var newResult = result
                 let newSet = element.value.connectedTo.filter {
                     results[$0]?.fileName.matches("^(?!\(folderPath)).*") ?? false && results[$0]?.moduleName == element.value.moduleName
@@ -154,7 +153,7 @@ public struct UseGraphAnalyzeCommand: AsyncParsableCommand {
     }
 }
 
-extension Node {
+extension UseGraphStaticAnalysis.Node {
     func toEdgeNode(with name: String) -> EdgeNode {
         EdgeNode(
             name: name,
