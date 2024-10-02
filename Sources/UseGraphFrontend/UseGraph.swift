@@ -1,11 +1,5 @@
-//
-//  UseGraph.swift
-//
-//
-//  Created by Roman Gorbenko on 08.06.2024.
-//
-
 import ArgumentParser
+import UseGraphStaticAnalysis
 import Foundation
 import UseGraphPeriphery
 

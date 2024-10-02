@@ -1,6 +1,6 @@
 import Foundation
 import GraphViz
-import UseGraphStaticAnalysis
+import UseGraphCore
 import Utils
 
 public final class GraphBuilder {
@@ -17,7 +17,7 @@ public final class GraphBuilder {
   }
   
   private func csvBuildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node]) {
-    let nodes: [String: Node] = dependencyGraph
+      let nodes: [String: UseGraphCore.Node] = dependencyGraph
       .reduce(Set<String>()) { result, element in
         var resultCopy = result
         resultCopy.insert(element.key)
@@ -27,7 +27,7 @@ public final class GraphBuilder {
       .reduce([:]) { result, name in
         var resultCopy = result
         let moduleName = dependencyGraph[name]?.moduleName ?? ""
-        let node = Node(
+          let node = UseGraphCore.Node(
           moduleName: moduleName,
           fileName: dependencyGraph[name]?.fileName ?? "",
           line: nil,

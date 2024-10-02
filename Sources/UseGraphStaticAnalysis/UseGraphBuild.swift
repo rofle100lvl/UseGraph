@@ -1,9 +1,8 @@
 import ArgumentParser
 import Foundation
 import UseGraphCore
-import UseGraphStaticAnalysis
 
-enum PathError: Error {
+public enum PathError: Error {
   case pathIsNotCorrect
   case shouldBeOnlyOnePath
   

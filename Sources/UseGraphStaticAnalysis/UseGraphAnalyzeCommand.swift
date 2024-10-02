@@ -1,7 +1,6 @@
 import ArgumentParser
 import Foundation
 import UseGraphCore
-import UseGraphStaticAnalysis
 import Utils
 
 struct EdgeNode: Hashable {
