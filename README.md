@@ -18,7 +18,3 @@ use_graph usage_graph_dynamic_analyze
 --project-path <path to your workspace/xbproj/Package.swift file>
 --folder-paths <Paths to folder with sources - "path1,path2,path3">
 ```
-
-> Guided setup only works for Xcode and SwiftPM projects, to use Periphery with non-Apple build systems such as Bazel, see [Build Systems](#build-systems).
-
-After answering a few questions, Periphery will print out the full scan command and execute it.
