@@ -55,11 +55,8 @@ public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
     @Option(help: "Path to project (.xcodeproj)")
     var projectPath: String? = nil
 
-    @Argument(help: "Schemes to analyze")
+    @Option(help: "Schemes to analyze")
     var schemes: String
-
-    @Argument(help: "Targets to analyze")
-    var targets: String
 
     public func run() async throws {
         let configuration = Configuration()

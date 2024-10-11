@@ -17,38 +17,24 @@ public struct UseGraphPeripheryAnalyzeCommand: AsyncParsableCommand {
         version: "0.0.1"
     )
 
-    @Argument(help: "Path to project (.xcodeproj)")
+    @Option(help: "Path to project (.xcodeproj)")
     var projectPath: String? = nil
 
-    @Argument(help: "Paths to folder with sources - \"path1,path2,path3\"")
-    var folderPaths: String? = nil
+    @Option(help: "Paths to folder with sources - \"path1,path2,path3\"")
+    var folderPaths: String
 
-    @Argument(help: "Schemes to analyze")
+    @Option(help: "Schemes to analyze")
     var schemes: String
-
-    @Argument(help: "Targets to analyze")
-    var targets: String
-
-    @Option(help: "Use if you want to exclude any entity names")
-    var excludedNames: String? = nil
-
-    @Option(help: "Use if you want to exclude any targets")
-    var excludedTargets: String? = nil
 
     public func run() async throws {
         var projectURL: URL?
-        var folderURLs: [String] = []
+        let folderURLs: [String] = try folderPaths.split(separator: ",").map {
+            guard let folderURL = URL(string: String($0)) else { throw PathError.pathIsNotCorrect }
+            return folderURL.path()
+        }
 
         if let projectPath {
             projectURL = URL(string: projectPath)
-        }
-        if let folderPaths {
-            folderURLs = try folderPaths.split(separator: ",").map {
-                guard let folderURL = URL(string: String($0)) else { throw PathError.pathIsNotCorrect }
-                return folderURL.path()
-            }
-        } else {
-            throw PathError.pathIsNotCorrect
         }
 
         guard let projectURL else { throw PathError.pathIsNotCorrect }
