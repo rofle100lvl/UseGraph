@@ -45,6 +45,7 @@ let package = Package(
             name: "UseGraphStaticAnalysis",
             dependencies: [
                 "UseGraphCore",
+                "Utils",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 .product(name: "XcodeProj", package: "XcodeProj"),

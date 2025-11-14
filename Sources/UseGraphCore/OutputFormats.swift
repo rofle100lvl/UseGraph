@@ -6,6 +6,7 @@ public enum OutputFormat {
     case png
     case gv
     case csv
+    case json
 
     public static func parse(format: String) throws -> OutputFormat {
         switch format.lowercased() {
@@ -17,6 +18,8 @@ public enum OutputFormat {
             .gv
         case "csv":
             .csv
+        case "json":
+            .json
         default:
             throw FormatError.formatIsNotCorrect
         }
