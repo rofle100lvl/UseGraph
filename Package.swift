@@ -70,13 +70,17 @@ let package = Package(
         .target(
             name: "Utils"
         ),
-//        .testTarget(
-//            name: "UseGraphTest",
-//            dependencies: [
-//                "UseGraphCore",
-//                .product(name: "SwiftSyntax", package: "swift-syntax"),
-//                .product(name: "SwiftParser", package: "swift-syntax"),
-//            ]
-//        ),
+        .testTarget(
+            name: "UseGraphPeripheryTests",
+            dependencies: [
+                "UseGraphPeriphery",
+                "UseGraphCore",
+                "Utils",
+                .product(name: "PeripheryKit", package: "periphery"),
+            ],
+            exclude: [
+                "TestProject/"
+            ]
+        ),
     ]
 )
