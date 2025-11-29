@@ -21,8 +21,8 @@ public final class SourceGraphRepository: SourceGraphRepositoryProtocol {
             
             guard let entity = reference.parent?.findEntity(),
                   entity != declaration.findEntity(),
-                  let entityParent = entity.presentAsNode(),
-                  let declarationParent = declaration.presentAsNode() else { return }
+                  let entityParent = entity.presentAsNode(sourceGraph: sourceGraph),
+                  let declarationParent = declaration.presentAsNode(sourceGraph: sourceGraph) else { return }
             
             let edge: EdgeWithoutReference
             
@@ -38,13 +38,17 @@ public final class SourceGraphRepository: SourceGraphRepositoryProtocol {
                 )
             }
             
+            // Получаем extensionInfo для declaration (вызываемого метода/свойства)
+            let extensionInfo = declaration.getExtensionInfo(sourceGraph: sourceGraph)
+            
             if edgeDict[edge] == nil {
                 edgeDict[edge] = []
             }
             edgeDict[edge]?.append(
                 Reference(
                     line: reference.location.line,
-                    file: reference.location.file.path.string
+                    file: reference.location.file.path.string,
+                    extensionInfo: extensionInfo
                 )
             )
         }
