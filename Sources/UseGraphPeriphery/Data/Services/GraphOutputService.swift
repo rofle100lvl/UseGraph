@@ -58,18 +58,29 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
         let edgesCSV = csvBuilder.createCSV(from: coreEdges)
         let nodesCSV = csvBuilder.createCSV(from: Array(uniqueSet))
         
+        // Collect all references from all edges
+        var allReferences: [Reference] = []
+        for edge in edges {
+            allReferences.append(contentsOf: edge.references)
+        }
+        let referencesCSV = csvBuilder.createCSV(from: allReferences)
+        
         let nodesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appending(path: "Nodes.csv")
         let edgesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appending(path: "Edges.csv")
+        let referencesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: "References.csv")
         
         guard let edgesData = edgesCSV.data(using: .utf8),
-              let nodesData = nodesCSV.data(using: .utf8) else {
+              let nodesData = nodesCSV.data(using: .utf8),
+              let referencesData = referencesCSV.data(using: .utf8) else {
             throw OutputFormatError.formatIsNotCorrect
         }
         
         FileManager.default.createFile(atPath: edgesUrl.path(), contents: edgesData)
         FileManager.default.createFile(atPath: nodesUrl.path(), contents: nodesData)
+        FileManager.default.createFile(atPath: referencesUrl.path(), contents: referencesData)
     }
     
     private func mapToGraphVizFormat(format: OutputFormat) -> Format? {

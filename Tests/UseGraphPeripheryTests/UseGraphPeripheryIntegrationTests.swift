@@ -15,10 +15,8 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        // Сохраняем текущую директорию
         originalWorkingDirectory = FileManager.default.currentDirectoryPath
         
-        // Получаем путь к тестовому Swift Package
         let currentFile = #file
         let testDir = URL(fileURLWithPath: currentFile)
             .deletingLastPathComponent()
@@ -26,20 +24,16 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             .appendingPathComponent("MyLibrary")
         testProjectPath = testDir.path
         
-        // Переходим в директорию тестового проекта
         FileManager.default.changeCurrentDirectoryPath(testProjectPath)
     }
     
     override func tearDown() {
-        // Возвращаемся в исходную директорию
         FileManager.default.changeCurrentDirectoryPath(originalWorkingDirectory)
         super.tearDown()
     }
     
     func testBuildGraphUseCaseExtractsCorrectEdges() async throws {
-        // Arrange: Настройка конфигурации для Swift Package
         let configuration = Configuration()
-                
         
         let project = try Project(configuration: configuration)
         let driver = try project.driver()
@@ -48,7 +42,6 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
         let graph = SourceGraph(configuration: configuration, logger: .init(quiet: true))
         _ = try Scan(configuration: configuration, sourceGraph: graph).perform(project: project)
         
-        // Создаем зависимости
         let sourceGraphRepository = SourceGraphRepository(sourceGraph: graph)
         let graphOutputService = GraphOutputService()
         let _ = BuildGraphUseCase(
@@ -56,17 +49,13 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             graphOutputService: graphOutputService
         )
         
-        // Act: Извлекаем edges
         let edges = try await sourceGraphRepository.extractEdges()
         
-        // Assert: Детальная проверка найденных сущностей и связей
         print("📊 Extracted \(edges.count) edges from Swift Package")
         
-        // Проверяем, что найдены сущности
         let allNodes = Set(edges.flatMap { [$0.from, $0.to] })
         print("📋 Found \(allNodes.count) unique nodes")
         
-        // Ищем A struct
         let aNodes = allNodes.filter { $0.entityName == "A" && $0.entityType == "struct" }
         XCTAssertEqual(aNodes.count, 1, "Should find exactly 1 A struct")
         
@@ -79,7 +68,6 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             XCTFail("A struct not found in extracted nodes")
         }
         
-        // Ищем B class
         let bNodes = allNodes.filter { $0.entityName == "B" && $0.entityType == "class" }
         XCTAssertEqual(bNodes.count, 1, "Should find exactly 1 B class")
         
@@ -92,13 +80,11 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             XCTFail("B class not found in extracted nodes")
         }
         
-        // Дополнительная проверка: выводим все найденные сущности для отладки
         print("📋 All found entities:")
         for node in allNodes.sorted(by: { $0.entityName ?? "" < $1.entityName ?? "" }) {
             print("  - \(node.entityName ?? "Unknown") (\(node.entityType ?? "unknown")) at line \(node.line ?? "?") in \(node.moduleName)")
         }
         
-        // Ищем связь между B и A
         let bToAEdges = edges.filter { edge in
             (edge.from.entityName == "B" && edge.to.entityName == "A") ||
             (edge.from.entityName == "A" && edge.to.entityName == "B")
@@ -109,8 +95,6 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             
             let edge = bToAEdges.first!
             XCTAssertFalse(edge.references.isEmpty, "Edge should have references")
-            
-            // Проверяем, что обе сущности из одного файла
             XCTAssertEqual(edge.from.fileName, edge.to.fileName, "Both entities should be from the same file")
             
             print("✅ Found edge: \(edge.from.entityName ?? "Unknown") -> \(edge.to.entityName ?? "Unknown")")
@@ -118,14 +102,65 @@ final class UseGraphPeripheryIntegrationTests: XCTestCase {
             print("✅ Same file: \(edge.from.fileName == edge.to.fileName)")
         } else {
             print("⚠️ No direct edge found between A and B")
-            // Это может быть нормально, если связь не прямая
         }
         
-        // Проверяем, что наша архитектура работает корректно
         XCTAssertNotNil(sourceGraphRepository, "SourceGraphRepository should be created")
         XCTAssertNotNil(graphOutputService, "GraphOutputService should be created")
         
         print("🎉 Architecture test completed successfully!")
+    }
+    
+    func testCSVOutputContainsReferences() async throws {
+        // Arrange
+        let configuration = Configuration()
+        let project = try Project(configuration: configuration)
+        let driver = try project.driver()
+        try driver.build()
+        
+        let graph = SourceGraph(configuration: configuration, logger: .init(quiet: true))
+        _ = try Scan(configuration: configuration, sourceGraph: graph).perform(project: project)
+        
+        let sourceGraphRepository = SourceGraphRepository(sourceGraph: graph)
+        let graphOutputService = GraphOutputService()
+        let buildGraphUseCase = BuildGraphUseCase(
+            sourceGraphRepository: sourceGraphRepository,
+            graphOutputService: graphOutputService
+        )
+        
+        // Act: Build CSV graph
+        try await buildGraphUseCase.execute(format: .csv)
+        
+        // Assert: Check that References.csv was created
+        let referencesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: "References.csv")
+        
+        XCTAssertTrue(FileManager.default.fileExists(atPath: referencesUrl.path()),
+                     "References.csv should be created")
+        
+        // Read and validate References.csv content
+        let referencesData = try Data(contentsOf: referencesUrl)
+        let referencesContent = String(data: referencesData, encoding: .utf8)
+        XCTAssertNotNil(referencesContent, "References.csv should have content")
+        
+        // Check CSV header
+        let lines = referencesContent?.components(separatedBy: .newlines) ?? []
+        XCTAssertTrue(lines.count > 1, "References.csv should have header and data")
+        XCTAssertTrue(lines[0].contains("line"), "Header should contain 'line'")
+        XCTAssertTrue(lines[0].contains("file"), "Header should contain 'file'")
+        XCTAssertTrue(lines[0].contains("extensionInfo"), "Header should contain 'extensionInfo'")
+        
+        print("✅ References.csv created successfully")
+        print("📋 CSV content preview:")
+        print(lines.prefix(5).joined(separator: "\n"))
+        
+        // Cleanup
+        try? FileManager.default.removeItem(at: referencesUrl)
+        let nodesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: "Nodes.csv")
+        let edgesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: "Edges.csv")
+        try? FileManager.default.removeItem(at: nodesUrl)
+        try? FileManager.default.removeItem(at: edgesUrl)
     }
     
 }
