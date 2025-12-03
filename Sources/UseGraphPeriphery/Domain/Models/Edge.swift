@@ -1,5 +1,6 @@
 import Foundation
 import UseGraphCore
+import Utils
 
 public struct Edge: Hashable {
     public let from: Node
@@ -10,6 +11,23 @@ public struct Edge: Hashable {
         self.from = from
         self.to = to
         self.references = references
+    }
+}
+
+extension Edge: JSONRepresentable {
+    public var jsonRepresentation: [String: Any] {
+        [
+            "source": from.id,
+            "target": to.id,
+            "type": "directed",
+            "references": references.map { ref in
+                [
+                    "line": ref.line,
+                    "file": ref.file,
+                    "extensionInfo": ref.extensionInfo ?? ""
+                ]
+            }
+        ]
     }
 }
 

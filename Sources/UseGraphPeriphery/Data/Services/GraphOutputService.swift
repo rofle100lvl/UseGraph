@@ -56,15 +56,25 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
         var uniqueSet = Set<UseGraphCore.Node>()
         edges.map { [$0.from, $0.to] }.flatMap { $0 }.forEach { uniqueSet.insert($0) }
         
-        let coreEdges = edges.map { UseGraphCore.Edge(source: $0.from.id, target: $0.to.id) }
+        // Assign IDs to edges and collect references with edge IDs
+        var coreEdges: [UseGraphCore.Edge] = []
+        var allReferences: [Reference] = []
+        
+        for (index, edge) in edges.enumerated() {
+            let edgeId = index + 1
+            var coreEdge = UseGraphCore.Edge(source: edge.from.id, target: edge.to.id)
+            coreEdge.id = edgeId
+            coreEdges.append(coreEdge)
+            
+            // Add edge ID to each reference
+            for var reference in edge.references {
+                reference.edgeId = edgeId
+                allReferences.append(reference)
+            }
+        }
+        
         let edgesCSV = csvBuilder.createCSV(from: coreEdges)
         let nodesCSV = csvBuilder.createCSV(from: Array(uniqueSet))
-        
-        // Collect all references from all edges
-        var allReferences: [Reference] = []
-        for edge in edges {
-            allReferences.append(contentsOf: edge.references)
-        }
         let referencesCSV = csvBuilder.createCSV(from: allReferences)
         
         let nodesUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -90,13 +100,7 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
         edges.map { [$0.from, $0.to] }.flatMap { $0 }.forEach { uniqueSet.insert($0) }
         
         let nodes = Array(uniqueSet)
-        let edgesJSON = edges.map { edge in
-            [
-                "source": edge.from.id,
-                "target": edge.to.id,
-                "type": "directed"
-            ]
-        }
+        let edgesJSON = edges.map { $0.jsonRepresentation }
         
         let jsonBuilder = JSONBuilder()
         let jsonData = try jsonBuilder.createJSON(nodes: nodes, edges: edgesJSON)

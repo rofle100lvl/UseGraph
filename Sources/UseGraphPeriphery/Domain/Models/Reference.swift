@@ -9,16 +9,19 @@ public struct Reference: Hashable, Comparable, CSVRepresentable {
     public let line: Int
     public let file: String
     public let extensionInfo: String?
+    public var edgeId: Int? // Optional for backward compatibility
     
-    public init(line: Int, file: String, extensionInfo: String? = nil) {
+    public init(line: Int, file: String, extensionInfo: String? = nil, edgeId: Int? = nil) {
         self.line = line
         self.file = file
         self.extensionInfo = extensionInfo
+        self.edgeId = edgeId
     }
     
     // CSVRepresentable
     public var csvRepresentation: String {
         let fields = [
+            edgeId.map(String.init) ?? "",
             String(line),
             file,
             extensionInfo ?? ""
@@ -27,6 +30,6 @@ public struct Reference: Hashable, Comparable, CSVRepresentable {
     }
     
     public var fields: [String] {
-        return ["line", "file", "extensionInfo"]
+        return ["edge_id", "line", "file", "extensionInfo"]
     }
 }

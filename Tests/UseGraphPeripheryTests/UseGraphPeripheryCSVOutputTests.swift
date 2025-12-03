@@ -118,14 +118,92 @@ final class UseGraphPeripheryCSVOutputTests: XCTestCase {
         print("  References with extensionInfo: \(referencesWithExtension)")
         print("  Percentage: \(referencesWithExtension * 100 / max(totalReferences, 1))%")
         
-        XCTAssertGreaterThan(referencesWithExtension, 0, 
+        XCTAssertGreaterThan(referencesWithExtension, 0,
                             "Should have at least some references with extensionInfo")
         
-        // TODO: В будущем нужно добавить вывод references в CSV
-        // чтобы extensionInfo была доступна для анализа
-        print("\n💡 Note: extensionInfo is available in Edge.references but not yet exported to CSV")
-        print("   Consider adding References.csv with columns: edge_id, line, file, extensionInfo")
-        
         print("✅ Extension info availability test completed!")
+    }
+    
+    func testCSVReferencesLinkedToEdgesByID() async throws {
+        // Arrange
+        let configuration = Configuration()
+        let project = try Project(configuration: configuration)
+        let driver = try project.driver()
+        try driver.build()
+        
+        let graph = SourceGraph(configuration: configuration, logger: .init(quiet: true))
+        _ = try Scan(configuration: configuration, sourceGraph: graph).perform(project: project)
+        
+        let sourceGraphRepository = SourceGraphRepository(sourceGraph: graph)
+        let graphOutputService = GraphOutputService()
+        
+        let edges = try await sourceGraphRepository.extractEdges()
+        
+        // Переходим во временную директорию для создания CSV
+        FileManager.default.changeCurrentDirectoryPath(tempDirectory.path)
+        
+        print("\n🧪 Testing CSV references are linked to edges via edge_id")
+        
+        // Act - Build CSV
+        try await graphOutputService.buildGraph(edges: edges, format: .csv)
+        
+        // Assert - Check Edges.csv has IDs
+        let edgesURL = tempDirectory.appendingPathComponent("Edges.csv")
+        let edgesContent = try String(contentsOf: edgesURL, encoding: .utf8)
+        let edgesLines = edgesContent.split(separator: "\n").map(String.init)
+        
+        XCTAssertGreaterThan(edgesLines.count, 1, "Edges.csv should have header and at least one edge")
+        
+        let edgesHeader = edgesLines[0]
+        XCTAssertTrue(edgesHeader.hasPrefix("id,"), "Edges.csv should start with 'id,' column")
+        print("✅ Edges.csv header: \(edgesHeader)")
+        
+        // Check first edge has ID = 1
+        let firstEdge = edgesLines[1]
+        let edgeComponents = firstEdge.split(separator: ",")
+        XCTAssertEqual(String(edgeComponents[0]), "1", "First edge should have ID = 1")
+        print("✅ First edge ID: \(edgeComponents[0])")
+        
+        // Assert - Check References.csv has edge_id
+        let referencesURL = tempDirectory.appendingPathComponent("References.csv")
+        let referencesContent = try String(contentsOf: referencesURL, encoding: .utf8)
+        let referencesLines = referencesContent.split(separator: "\n").map(String.init)
+        
+        XCTAssertGreaterThan(referencesLines.count, 1, "References.csv should have header and at least one reference")
+        
+        let referencesHeader = referencesLines[0]
+        XCTAssertTrue(referencesHeader.hasPrefix("edge_id,"), "References.csv should start with 'edge_id,' column")
+        print("✅ References.csv header: \(referencesHeader)")
+        
+        // Count references per edge_id
+        var referencesPerEdge: [String: Int] = [:]
+        var referencesWithExtensionInfo = 0
+        
+        for line in referencesLines.dropFirst() {
+            let components = line.split(separator: ",").map(String.init)
+            XCTAssertGreaterThanOrEqual(components.count, 3, "Reference should have at least edge_id, line, file")
+            
+            let edgeId = components[0]
+            XCTAssertFalse(edgeId.isEmpty, "Reference should have non-empty edge_id")
+            referencesPerEdge[edgeId, default: 0] += 1
+            
+            // Check extensionInfo (last column) - file paths may contain commas
+            let lastComponent = components.last ?? ""
+            if !lastComponent.isEmpty && lastComponent.contains("extension:") {
+                referencesWithExtensionInfo += 1
+            }
+        }
+        
+        print("📊 References per edge:")
+        for (edgeId, count) in referencesPerEdge.sorted(by: { $0.key < $1.key }) {
+            print("  Edge \(edgeId): \(count) references")
+        }
+        
+        // Based on MyExtensionLibrary: 1 edge with 7 references, 4 with extensionInfo
+        XCTAssertEqual(referencesPerEdge["1"], 7, "Edge 1 should have exactly 7 references")
+        XCTAssertEqual(referencesWithExtensionInfo, 4, "Should have exactly 4 references with extensionInfo")
+        
+        print("✅ CSV files are properly linked via edge_id!")
+        print("✅ Can now JOIN Edges.csv and References.csv by edge_id column")
     }
 }
