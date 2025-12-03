@@ -27,7 +27,7 @@ public struct UseGraphPeripheryBuildCommand: AsyncParsableCommand {
     @Option(help: "Paths to index store")
     var indexStore: String? = nil
     
-    @Option(help: "Output file format. Now available: CSV, SVG, PNG, GV")
+    @Option(help: "Output file format. Now available: CSV, SVG, PNG, GV, JSON")
     var format: String = "csv"
 
     public func run() async throws {

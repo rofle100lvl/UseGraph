@@ -28,6 +28,8 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
             System.shared.run("open \(url.path())")
         case .csv:
             try buildCSVGraph(edges: edges)
+        case .json:
+            try buildJSONGraph(edges: edges)
         }
     }
     
@@ -83,6 +85,27 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
         FileManager.default.createFile(atPath: referencesUrl.path(), contents: referencesData)
     }
     
+    private func buildJSONGraph(edges: [Edge]) throws {
+        var uniqueSet = Set<UseGraphCore.Node>()
+        edges.map { [$0.from, $0.to] }.flatMap { $0 }.forEach { uniqueSet.insert($0) }
+        
+        let nodes = Array(uniqueSet)
+        let edgesJSON = edges.map { edge in
+            [
+                "source": edge.from.id,
+                "target": edge.to.id,
+                "type": "directed"
+            ]
+        }
+        
+        let jsonBuilder = JSONBuilder()
+        let jsonData = try jsonBuilder.createJSON(nodes: nodes, edges: edgesJSON)
+        
+        let jsonUrl = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appending(path: "Graph.json")
+        FileManager.default.createFile(atPath: jsonUrl.path(), contents: jsonData)
+    }
+    
     private func mapToGraphVizFormat(format: OutputFormat) -> Format? {
         switch format {
         case .svg:
@@ -91,7 +114,7 @@ public final class GraphOutputService: GraphOutputServiceProtocol {
             return .png
         case .gv:
             return .gv
-        case .csv:
+        case .csv, .json:
             return nil
         }
     }

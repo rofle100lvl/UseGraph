@@ -6,18 +6,21 @@ import Utils
 public final class GraphBuilder {
   public static let shared = GraphBuilder()
   let csvBuilder: CSVBuilding
+  let jsonBuilder: JSONBuilding
   let outputGraphBuilder: OutputGraphBuilding
   
   private init(
     csvBuilder: CSVBuilding = CSVBuilder(),
+    jsonBuilder: JSONBuilding = JSONBuilder(),
     outputGraphBuilder: OutputGraphBuilding = OutputGraphBuilder()
   ) {
     self.csvBuilder = csvBuilder
+    self.jsonBuilder = jsonBuilder
     self.outputGraphBuilder = outputGraphBuilder
   }
   
-  private func csvBuildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node]) {
-      let nodes: [String: UseGraphCore.Node] = dependencyGraph
+  private func prepareGraphData(from dependencyGraph: [String: UseGraphStaticAnalysis.Node]) -> (nodes: [UseGraphCore.Node], edges: [UseGraphCore.Edge]) {
+    let nodes: [String: UseGraphCore.Node] = dependencyGraph
       .reduce(Set<String>()) { result, element in
         var resultCopy = result
         resultCopy.insert(element.key)
@@ -27,7 +30,7 @@ public final class GraphBuilder {
       .reduce([:]) { result, name in
         var resultCopy = result
         let moduleName = dependencyGraph[name]?.moduleName ?? ""
-          let node = UseGraphCore.Node(
+        let node = UseGraphCore.Node(
           moduleName: moduleName,
           fileName: dependencyGraph[name]?.fileName ?? "",
           line: nil,
@@ -55,8 +58,14 @@ public final class GraphBuilder {
       return newResult
     }
     
+    return (nodes.map { $0.value }, edges)
+  }
+  
+  private func csvBuildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node]) {
+    let (nodes, edges) = prepareGraphData(from: dependencyGraph)
+    
     let edgesCSV = csvBuilder.createCSV(from: edges)
-    let nodesCSV = csvBuilder.createCSV(from: nodes.map { $0.value })
+    let nodesCSV = csvBuilder.createCSV(from: nodes)
     
     let nodesUrl = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Nodes.csv")
     let edgesUrl = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Edges.csv")
@@ -65,6 +74,16 @@ public final class GraphBuilder {
           let nodesData = nodesCSV.data(using: .utf8) else { fatalError() }
     print(FileManager.default.createFile(atPath: edgesUrl.path(), contents: edgesData))
     print(FileManager.default.createFile(atPath: nodesUrl.path(), contents: nodesData))
+  }
+  
+  private func jsonBuildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node]) throws {
+    let (nodes, edges) = prepareGraphData(from: dependencyGraph)
+    
+    let edgesJSON = edges.map { $0.jsonRepresentation }
+    let jsonData = try jsonBuilder.createJSON(nodes: nodes, edges: edgesJSON)
+    
+    let jsonUrl = URL(fileURLWithPath: #file).deletingLastPathComponent().appending(path: "Graph.json")
+    print(FileManager.default.createFile(atPath: jsonUrl.path(), contents: jsonData))
   }
   
   public func buildGraph(dependencyGraph: [String: UseGraphStaticAnalysis.Node], format: OutputFormat) async throws {
@@ -82,6 +101,8 @@ public final class GraphBuilder {
       }
     case .csv:
       csvBuildGraph(dependencyGraph: dependencyGraph)
+    case .json:
+      try jsonBuildGraph(dependencyGraph: dependencyGraph)
     }
   }
   
@@ -128,7 +149,7 @@ extension GraphBuilder {
         .png
     case .gv:
         .gv
-    case .csv:
+    case .csv, .json:
       nil
     }
   }

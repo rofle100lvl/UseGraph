@@ -31,7 +31,7 @@ public struct UseGraphBuildCommand: AsyncParsableCommand {
   @Option(help: "Path to folder with sources")
   var folderPath: String? = nil
   
-  @Argument(help: "Output file format. Now available: CSV, SVG, PNG, GV")
+  @Argument(help: "Output file format. Now available: CSV, SVG, PNG, GV, JSON")
   var format: String = "svg"
     
   @Flag(help: "If enabled all leasts will show you type of their variables")

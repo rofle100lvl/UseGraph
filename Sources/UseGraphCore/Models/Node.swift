@@ -1,6 +1,6 @@
 import Utils
 
-public struct Node: Hashable, CSVRepresentable {
+public struct Node: Hashable, CSVRepresentable, JSONRepresentable, Codable {
     public var csvRepresentation: String {
       let fields = [
         id,
@@ -15,6 +15,19 @@ public struct Node: Hashable, CSVRepresentable {
 
     public var fields: [String] {
       return ["id", "moduleName", "fileName", "line", "entityName", "entityType"]
+    }
+
+    public var jsonRepresentation: [String: Any] {
+        [
+            "id": id,
+            "moduleName": moduleName,
+            "fileName": fileName,
+            "line": line ?? "",
+            "entityName": entityName ?? "",
+            "containerName": containerName ?? "",
+            "entityType": entityType ?? "",
+            "usrs": Array(usrs)
+        ]
     }
 
     public var id: String {
